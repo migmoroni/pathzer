@@ -22,21 +22,60 @@
  */
 
 const readPath = require('./lib/readPath');
-const orgPath = require('./lib/orgPath');
+const orgPathExt = require('./lib/orgPathExt');
+const orgPathFolder = require('./lib/orgPathFolder');
+
 const filterPath = require('./lib/filterPath');
 
-function pathzer(mode = '1', obj, process){
+// Obtém os argumentos da linha de comando
+const args = process.argv.slice(2);
+
+// Obter o caminho absoluto do diretório onde o script foi chamado, por padrão
+let pathBase = process.cwd();
+
+//Código voltado ao uso de Terminal...
+
+//Código voltado a API
+function pathzer(obj, mode = 1, process){
 
     switch(mode){
         case 1:
             return readPath(obj);
+            
         case 2:
-            return orgPath(obj);
-        case 3:
-            return filterPath(obj);
-        case 101:
             readPath(obj).then(result => {
-                result = orgPath(result);
+                result = orgTreeArrayPath(result);
+                console.log(result);
+                return result;
+            });
+            break;
+
+        case 3:
+            readPath(obj).then(result => {
+                result = orgFolderExtensionPath(result);
+                return result;
+            });
+            break;
+
+        case 4:
+            let objAux = [];
+            readPath(obj).then(result => {
+                result = orgFolderExtensionPath(result);
+                result.forEach((line) => {
+                    let {path, folders, files} = filterPath(line);
+                    objAux.push(path, folders, files);
+                });
+                console.log(objAux)
+                return objAux;
+        
+            }).catch(error => {
+                console.error("Read error:", error);
+            });
+            break;
+
+        case 31:
+            readPath(obj).then(result => {
+                result = orgFolderExtensionPath(result);
                 console.log(result)
                 result.forEach((line) => {
                     let {path, folders, files} = filterPath(line);
@@ -49,7 +88,7 @@ function pathzer(mode = '1', obj, process){
             break;
             
         default:
-            console.log(`Not know: ${arg}`);
+            console.log(`Not know: ${mode}`);
             showHelp();
             break;
     }
