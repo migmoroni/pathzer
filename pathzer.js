@@ -40,7 +40,7 @@ function loadCacheIds() {
   return Object.keys(cache);
 }
 
-// Function to load cache IDs with their paths (for 'pf' command)
+// Function to load cache IDs with their paths (for '?f' command)
 function loadCacheIdsWithPaths() {
   const homeDir = require('os').homedir();
   const cacheFilePath = path.join(homeDir, 'pathzer', 'paths.json');
@@ -100,7 +100,7 @@ function pathzer(dir = process.cwd(), ...commands) {
   let path = dir;
   let operations = commands.join(''); // Join commands into a single string
 
-  // If the first argument is a path code like pXX, fetch from cache
+  // If the first argument is a path code like ?XX, fetch from cache
   if (path.startsWith('?')) {
     const code = path;
 
@@ -186,18 +186,19 @@ if (require.main === module) {
 
   switch (firstArg) {
     case '-i':
-      console.log(help());
-      break;
+      case '--info':
+        console.log(help());
+        break;
 
     case '-v':
-    case '-version':
-      console.log(version());
-      break;
+      case '--version':
+        console.log(version());
+        break;
 
     case undefined:
-    case '':
-      console.log(help());
-      break;
+      case '':
+        console.log(help());
+        break;
 
     default:
       const dir = firstArg.startsWith('?') ? firstArg : process.cwd();
