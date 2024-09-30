@@ -63,6 +63,30 @@ Para executar o programa, use o seguinte comando no terminal, passando o caminho
 node pathzer 'path' 
 ```
 
+#### Consulta de Path
+
+- Via path conhecido
+
+```bash
+node pathzer 'home/projects/myproject'
+```
+
+- Via path relativo
+
+```bash
+node pathzer
+```
+
+- Via cache de paths salvos
+
+```bash
+node pathzer *12
+```
+
+*12 =
+"*" identificador para pesquisa no cache
+"12" id do path
+
 
 
 ### Exemplo de Processamento

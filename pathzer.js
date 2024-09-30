@@ -1,97 +1,211 @@
-/**
- * @license pathzer.js v0.1
- *
- * Copyright (c) 2024, Miguel Eduardo Senna Moroni
- * 
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- * 
- * Allow this project to continue. Visit our website: github.com/migmoroni/pathzer
- **/
+const path = require('path');
+const fs = require('fs');
+const levels = require('./lib/levels');
 
-/**
- *
- * EN-US: This program allows you to perform analyzes on a provided path, 
- * allowing you to return an array with the mapping of all folders and files in a hierarchical manner, 
- * but you can also organize and filter this data, depending on your needs.
- * 
- * PT-BR: Este programa permite realizar análises em um caminho fornecido, 
- * permitindo retornar um array com o mapeamento de todas as pastas e arquivos de forma hierárquica, 
- * mas você também pode organizar e filtrar esses dados, dependendo da sua necessidade.
- *
- */
+// Function to load the cache path based on the ID (e.g., pXX)
+function loadCachePath(code) {
+  const homeDir = require('os').homedir();
+  const cacheFilePath = path.join(homeDir, 'pathzer', 'paths.json');
 
-const readPath = require('./lib/readPath');
-const orgPathExt = require('./lib/orgPathExt');
-const orgPathFolder = require('./lib/orgPathFolder');
+  if (!fs.existsSync(cacheFilePath)) {
+    console.log('Cache file not found.');
+    return null;
+  }
 
-const filterPath = require('./lib/filterPath');
+  const cache = JSON.parse(fs.readFileSync(cacheFilePath, 'utf8'));
 
-// Obtém os argumentos da linha de comando
-const args = process.argv.slice(2);
+  const id = code.slice(1); // Remove '?' from the code to get the ID
 
-// Obter o caminho absoluto do diretório onde o script foi chamado, por padrão
-let pathBase = process.cwd();
+  if (cache[id]) {
+    console.log(`Path found for ${code}: ${cache[id]}`);
+    return cache[id];
+  } else {
+    console.log(`Path not found for code ${code}`);
+    return null;
+  }
+}
 
-//Código voltado ao uso de Terminal...
+// Function to load all cache IDs (for '?' command)
+function loadCacheIds() {
+  const homeDir = require('os').homedir();
+  const cacheFilePath = path.join(homeDir, 'pathzer', 'paths.json');
 
-//Código voltado a API
-function pathzer(obj, mode = 1, process){
+  if (!fs.existsSync(cacheFilePath)) {
+    console.log('Cache file not found.');
+    return [];
+  }
 
-    switch(mode){
-        case 1:
-            return readPath(obj);
-            
-        case 2:
-            readPath(obj).then(result => {
-                result = orgTreeArrayPath(result);
-                console.log(result);
-                return result;
-            });
-            break;
+  const cache = JSON.parse(fs.readFileSync(cacheFilePath, 'utf8'));
 
-        case 3:
-            readPath(obj).then(result => {
-                result = orgFolderExtensionPath(result);
-                return result;
-            });
-            break;
+  return Object.keys(cache);
+}
 
-        case 4:
-            let objAux = [];
-            readPath(obj).then(result => {
-                result = orgFolderExtensionPath(result);
-                result.forEach((line) => {
-                    let {path, folders, files} = filterPath(line);
-                    objAux.push(path, folders, files);
-                });
-                console.log(objAux)
-                return objAux;
-        
-            }).catch(error => {
-                console.error("Read error:", error);
-            });
-            break;
+// Function to load cache IDs with their paths (for 'pf' command)
+function loadCacheIdsWithPaths() {
+  const homeDir = require('os').homedir();
+  const cacheFilePath = path.join(homeDir, 'pathzer', 'paths.json');
 
-        case 31:
-            readPath(obj).then(result => {
-                result = orgFolderExtensionPath(result);
-                console.log(result)
-                result.forEach((line) => {
-                    let {path, folders, files} = filterPath(line);
-                    process(path, folders, files);
-                });
-        
-            }).catch(error => {
-                console.error("Read error:", error);
-            });
-            break;
-            
-        default:
-            console.log(`Not know: ${mode}`);
-            showHelp();
-            break;
+  if (!fs.existsSync(cacheFilePath)) {
+    console.log('Cache file not found.');
+    return {};
+  }
+
+  const cache = JSON.parse(fs.readFileSync(cacheFilePath, 'utf8'));
+
+  return cache;
+}
+
+// Function that processes the letter command and multiple parameters
+function processBlock(block) {
+  const option = block[0]; // First letter
+  const param = block.slice(1).split(','); // Parameters separated by comma
+  return { option, param };
+}
+
+// Function that pre-processes the commands and separates blocks with multiple parameters
+function preprocessCommands(command) {
+  const separatedCommands = [];
+  let buffer = '';
+
+  for (let i = 0; i < command.length; i++) {
+    const char = command[i];
+
+    if (isNaN(char) && char !== ',') {
+      // Found a letter, push the previous buffer and start a new one
+      if (buffer) {
+        separatedCommands.push(buffer);
+      }
+      buffer = char;
+    } else {
+      // If it's a number or comma, add it to the current buffer
+      buffer += char;
     }
+  }
+
+  // Push the last buffer
+  if (buffer) {
+    separatedCommands.push(buffer);
+  }
+
+  return separatedCommands;
+}
+
+// Main function
+function pathzer(dir = process.cwd(), ...commands) {
+  if (commands.length === 0) {
+    console.log(help());
+    return;
+  }
+
+  let path = dir;
+  let operations = commands.join(''); // Join commands into a single string
+
+  // If the first argument is a path code like pXX, fetch from cache
+  if (path.startsWith('?')) {
+    const code = path;
+
+    if (code === '?') {
+      const cacheIds = loadCacheIds();
+      console.log('Cache IDs:', cacheIds);
+      return { cacheIds };
+    }
+
+    if (code === '?f') {
+      const cacheWithPaths = loadCacheIdsWithPaths();
+      console.log('Cache IDs with paths:', cacheWithPaths);
+      return { cacheWithPaths };
+    }
+
+    const cachePath = loadCachePath(code);
+    if (cachePath) {
+      path = cachePath;
+    } else {
+      console.log('Error: Path not found in cache.');
+      return;
+    }
+  }
+
+  // Pre-processing for commands like "a1,3b1,7c2" or "a1,3 b1,7 c2"
+  const separatedCommands = preprocessCommands(operations);
+
+  let result = {
+    path,
+    commands: [],
+  };
+
+  for (let i = 0; i < separatedCommands.length; i++) {
+    const command = separatedCommands[i];
+
+    // Skip if it's '0' to skip a level
+    if (command === '-') {
+      continue;
+    }
+
+    // Process the block to separate the letter and parameters
+    const { option, param } = processBlock(command);
+
+    // Execute the levels
+    levels(i, option, param);
+
+    result.commands.push({ level: i + 1, option, param });
+  }
+
+  return result;
+}
+
+// Function to show the help menu
+function help() {
+  return `
+  Usage of pathzer:
+  node pathzer '/path' [a1] [b1] [c1] [d1]
+  
+  - If the path is omitted, it uses the current directory.
+  - You can use a cached path code (e.g., ?21).
+  - The letters represent the operation for each level, and the numbers represent the parameter (default "1").
+  - If the number is not provided, it defaults to 1.
+  - To skip a level, use "0".
+  - Examples:
+    node pathzer '/path' a1 b1 c1
+    node pathzer p21 0 b1 a2
+  
+  Other commands:
+  node pathzer -i   Shows the help menu.
+  node pathzer -v   Shows the version.
+  `;
+}
+
+// Function to show the version
+function version() {
+  return 'Version 0.9.0';
+}
+
+// If running via command line
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  const firstArg = args[0] || '';
+
+  switch (firstArg) {
+    case '-i':
+      console.log(help());
+      break;
+
+    case '-v':
+    case '-version':
+      console.log(version());
+      break;
+
+    case undefined:
+    case '':
+      console.log(help());
+      break;
+
+    default:
+      const dir = firstArg.startsWith('?') ? firstArg : process.cwd();
+      const commands = args;
+      const result = pathzer(dir, ...commands);
+      console.log(JSON.stringify(result, null, 2));
+      break;
+  }
 }
 
 module.exports = pathzer;
