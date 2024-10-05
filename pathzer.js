@@ -1,212 +1,95 @@
-const path = require('path');
-const fs = require('fs');
-const levels = require('./lib/levels');
+#!/usr/bin/env node
 
-// Function to load the cache path based on the ID (e.g., pXX)
-function loadCachePath(code) {
-  const homeDir = require('os').homedir();
-  const cacheFilePath = path.join(homeDir, 'pathzer', 'paths.json');
+const { MAX_LEVELS, levels, help } = require('./lib/levels');
 
-  if (!fs.existsSync(cacheFilePath)) {
-    console.log('Cache file not found.');
-    return null;
-  }
-
-  const cache = JSON.parse(fs.readFileSync(cacheFilePath, 'utf8'));
-
-  const id = code.slice(1); // Remove '?' from the code to get the ID
-
-  if (cache[id]) {
-    console.log(`Path found for ${code}: ${cache[id]}`);
-    return cache[id];
-  } else {
-    console.log(`Path not found for code ${code}`);
-    return null;
-  }
+function processLevel(levelStr) {
+    const [option, ...params] = levelStr.split(/,|=/);
+    return { option, param: params };
 }
 
-// Function to load all cache IDs (for '?' command)
-function loadCacheIds() {
-  const homeDir = require('os').homedir();
-  const cacheFilePath = path.join(homeDir, 'pathzer', 'paths.json');
+/****
+ * @function pathzer
+ * @description Função responsável por processar até N níveis hierárquicos, cada nível contendo uma "option" e um conjunto de "param".
+ * @public
+ * 
+ * @param {Object[]} inputLevels - Um array contendo até MAX_LEVELS objetos de níveis hierárquicos. Cada objeto deve ter a seguinte estrutura:
+ *  - {string} option - A opção do nível, representando a função ou ação que será executada.
+ *  - {Array<string>} param - Um array de strings representando os parâmetros associados à opção.
+ *  - Caso o nível deva ser pulado, pode-se usar `null` no lugar do objeto.
+ * 
+ * @returns {Array<Object|null>} Um array de objetos representando os níveis processados. Cada objeto possui as chaves:
+ *  - {number} level - O número do nível, começando em 1.
+ *  - {string} option - A opção (função) processada para aquele nível.
+ *  - {Array<string>} param - Um array de parâmetros associados àquela opção.
+ *  - Se um nível for pulado, o valor `null` será retornado na posição correspondente.
+ * 
+ * @throws {Error} Se o número de níveis exceder o limite definido em MAX_LEVELS.
+ * 
+ * @example
+ * 
+ * pathzer('?=home/user/projects', 'rp=full', 'pp=0')
+ *  
+ * option: '?' , param: ['home/user/projects']
+ * option: 'rp', param: ['full']
+ * option: 'pp', param: ['0']
+ * 
+ * @see levels - A função levels é chamada para processar cada nível.
+ ****/
 
-  if (!fs.existsSync(cacheFilePath)) {
-    console.log('Cache file not found.');
-    return [];
-  }
-
-  const cache = JSON.parse(fs.readFileSync(cacheFilePath, 'utf8'));
-
-  return Object.keys(cache);
-}
-
-// Function to load cache IDs with their paths (for '?f' command)
-function loadCacheIdsWithPaths() {
-  const homeDir = require('os').homedir();
-  const cacheFilePath = path.join(homeDir, 'pathzer', 'paths.json');
-
-  if (!fs.existsSync(cacheFilePath)) {
-    console.log('Cache file not found.');
-    return {};
-  }
-
-  const cache = JSON.parse(fs.readFileSync(cacheFilePath, 'utf8'));
-
-  return cache;
-}
-
-// Function that processes the letter command and multiple parameters
-function processBlock(block) {
-  const option = block[0]; // First letter
-  const param = block.slice(1).split(','); // Parameters separated by comma
-  return { option, param };
-}
-
-// Function that pre-processes the commands and separates blocks with multiple parameters
-function preprocessCommands(command) {
-  const separatedCommands = [];
-  let buffer = '';
-
-  for (let i = 0; i < command.length; i++) {
-    const char = command[i];
-
-    if (isNaN(char) && char !== ',') {
-      // Found a letter, push the previous buffer and start a new one
-      if (buffer) {
-        separatedCommands.push(buffer);
-      }
-      buffer = char;
-    } else {
-      // If it's a number or comma, add it to the current buffer
-      buffer += char;
-    }
-  }
-
-  // Push the last buffer
-  if (buffer) {
-    separatedCommands.push(buffer);
-  }
-
-  return separatedCommands;
-}
-
-// Main function
-function pathzer(dir = process.cwd(), ...commands) {
-  if (commands.length === 0) {
-    console.log(help());
-    return;
-  }
-
-  let path = dir;
-  let operations = commands.join(''); // Join commands into a single string
-
-  // If the first argument is a path code like ?XX, fetch from cache
-  if (path.startsWith('?')) {
-    const code = path;
-
-    if (code === '?') {
-      const cacheIds = loadCacheIds();
-      console.log('Cache IDs:', cacheIds);
-      return { cacheIds };
+function pathzer(...inputLevels) {
+    if (inputLevels.length > MAX_LEVELS) {
+        throw new Error(`Exceeded the maximum number of allowed levels (${MAX_LEVELS}).`);
     }
 
-    if (code === '?f') {
-      const cacheWithPaths = loadCacheIdsWithPaths();
-      console.log('Cache IDs with paths:', cacheWithPaths);
-      return { cacheWithPaths };
-    }
+    const results = [];
 
-    const cachePath = loadCachePath(code);
-    if (cachePath) {
-      path = cachePath;
-    } else {
-      console.log('Error: Path not found in cache.');
-      return;
-    }
-  }
+    inputLevels.forEach((level, index) => {
+        if (level) {
+            const { option, param } = level;
+            results.push(levels(results, index + 1, option, ...param));
+        } else {
+            results.push(null);  
+        }
+    });
 
-  // Pre-processing for commands like "a1,3b1,7c2" or "a1,3 b1,7 c2"
-  const separatedCommands = preprocessCommands(operations);
-
-  let result = {
-    path,
-    commands: [],
-  };
-
-  for (let i = 0; i < separatedCommands.length; i++) {
-    const command = separatedCommands[i];
-
-    // Skip if it's '0' to skip a level
-    if (command === '-') {
-      continue;
-    }
-
-    // Process the block to separate the letter and parameters
-    const { option, param } = processBlock(command);
-
-    // Execute the levels
-    levels(i, option, param);
-
-    result.commands.push({ level: i + 1, option, param });
-  }
-
-  return result;
+    return results;
 }
 
-// Function to show the help menu
-function help() {
-  return `
-  Usage of pathzer:
-  node pathzer '/path' [a1] [b1] [c1] [d1]
-  
-  - If the path is omitted, it uses the current directory.
-  - You can use a cached path code (e.g., ?21).
-  - The letters represent the operation for each level, and the numbers represent the parameter (default "1").
-  - If the number is not provided, it defaults to 1.
-  - To skip a level, use "0".
-  - Examples:
-    node pathzer '/path' a1 b1 c1
-    node pathzer p21 0 b1 a2
-  
-  Other commands:
-  node pathzer -i   Shows the help menu.
-  node pathzer -v   Shows the version.
-  `;
-}
-
-// Function to show the version
-function version() {
-  return 'Version 0.9.0';
-}
-
-// If running via command line
+// CLI Process
 if (require.main === module) {
-  const args = process.argv.slice(2);
-  const firstArg = args[0] || '';
+    const args = process.argv.slice(2).join(' ');
 
-  switch (firstArg) {
-    case '-i':
-      case '--info':
+    if (!args) {
         console.log(help());
-        break;
+    } else {
+        const parsedLevels = [];
+        let levelCount = 0;
 
-    case '-v':
-      case '--version':
-        console.log(version());
-        break;
+        const blocks = args.split(/\s/);
+        blocks.forEach((block) => {
+            const dashMatch = block.match(/^-+$/);
 
-    case undefined:
-      case '':
-        console.log(help());
-        break;
+            if (dashMatch) {
+                const dashCount = dashMatch[0].length;
+                for (let i = 0; i < dashCount; i++) {
+                    parsedLevels.push(null);
+                    levelCount++;
+                }
+            } else if (block.trim()) {
+                parsedLevels.push(processLevel(block));
+                levelCount++;
+            }
+        });
 
-    default:
-      const dir = firstArg.startsWith('?') ? firstArg : process.cwd();
-      const commands = args;
-      const result = pathzer(dir, ...commands);
-      console.log(JSON.stringify(result, null, 2));
-      break;
-  }
+        while (parsedLevels.length < MAX_LEVELS) {
+            parsedLevels.push(null);
+        }
+
+        if (parsedLevels.length > MAX_LEVELS) {
+            parsedLevels.length = MAX_LEVELS;
+        }
+
+        const result = pathzer(...parsedLevels);
+        console.log(JSON.stringify(result, null, 2));
+    }
 }
-
-module.exports = pathzer;

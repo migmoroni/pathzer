@@ -68,7 +68,11 @@ node pathzer 'path'
 - Via path conhecido
 
 ```bash
-node pathzer 'home/projects/myproject'
+node pathzer ?=home/projects/myproject
+
+node pathzer ?='home/projects/myproject'
+
+node pathzer ?="home/projects/myproject"
 ```
 
 - Via path relativo
@@ -80,14 +84,20 @@ node pathzer
 - Via cache de paths salvos
 
 ```bash
-node pathzer *12
+node pathzer ?12
 ```
 
 *12 =
-"*" identificador para pesquisa no cache
+"?" identificador para pesquisa no cache
 "12" id do path
 
+#### 
 
+```bash
+node pathzer a,1,1by,3
+node pathzer a,1,1 by,3
+node pathzer all,1,1 b,3h,8
+``` 
 
 ### Exemplo de Processamento
 
