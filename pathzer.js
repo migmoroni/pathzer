@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-const { MAX_LEVELS, levels, help } = require('./lib/levels');
+const { MAX_LEVELS, levels } = require('./lib/levels');
+const { help } = require('./lib/options');
 
 function processLevel(levelStr) {
     const [option, ...params] = levelStr.split(/,|=/);
