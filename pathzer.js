@@ -3,10 +3,7 @@
 const { MAX_LEVELS, levels } = require('./lib/levels');
 const { help } = require('./lib/options');
 
-function processLevel(levelStr) {
-    const [option, ...params] = levelStr.split(/,|=/);
-    return { option, param: params };
-}
+
 
 /****
  * @function pathzer
@@ -37,7 +34,19 @@ function processLevel(levelStr) {
  * @see levels - A função levels é chamada para processar cada nível.
  ****/
 
-function pathzer(...inputLevels) {
+function pathzer(...argv) {
+    const args = argv.join(' ');
+    if (!args) {
+        return help();
+    } else {
+        const parsedLevels = processFirst(args);
+        const result = main(...parsedLevels);
+        
+        return result;
+    }
+}
+
+function main(...inputLevels) {
     if (inputLevels.length > MAX_LEVELS) {
         throw new Error(`Exceeded the maximum number of allowed levels (${MAX_LEVELS}).`);
     }
@@ -47,13 +56,51 @@ function pathzer(...inputLevels) {
     inputLevels.forEach((level, index) => {
         if (level) {
             const { option, param } = level;
-            results.push(levels(results, index + 1, option, ...param));
+            results.push(levels(index + 1, option, ...param));
         } else {
             results.push(null);  
         }
     });
 
     return results;
+}
+
+function processLevel(levelStr) {
+    const [option, ...params] = levelStr.split(/,|=/);
+    return { option, param: params };
+}
+
+function processFirst(args){
+    const parsedLevels = [];
+    const blocks = args.split(/\s/);
+    let levelCount = 0;
+
+    blocks.forEach((block) => {
+        const dashMatch = block.match(/^-+$/);
+
+        if (dashMatch) {
+            const dashCount = dashMatch[0].length;
+            for (let i = 0; i < dashCount; i++) {
+                parsedLevels.push(null);
+                levelCount++;
+            }
+        } else if (block.trim()) {
+            parsedLevels.push(processLevel(block));
+            levelCount++;
+        }
+    });
+
+
+    /*
+    while (parsedLevels.length < MAX_LEVELS) {
+        parsedLevels.push(null);
+    }
+
+    if (parsedLevels.length > MAX_LEVELS) {
+        parsedLevels.length = MAX_LEVELS;
+    }
+    */
+    return parsedLevels;
 }
 
 // CLI Process
@@ -63,34 +110,10 @@ if (require.main === module) {
     if (!args) {
         console.log(help());
     } else {
-        const parsedLevels = [];
-        let levelCount = 0;
-
-        const blocks = args.split(/\s/);
-        blocks.forEach((block) => {
-            const dashMatch = block.match(/^-+$/);
-
-            if (dashMatch) {
-                const dashCount = dashMatch[0].length;
-                for (let i = 0; i < dashCount; i++) {
-                    parsedLevels.push(null);
-                    levelCount++;
-                }
-            } else if (block.trim()) {
-                parsedLevels.push(processLevel(block));
-                levelCount++;
-            }
-        });
-
-        while (parsedLevels.length < MAX_LEVELS) {
-            parsedLevels.push(null);
-        }
-
-        if (parsedLevels.length > MAX_LEVELS) {
-            parsedLevels.length = MAX_LEVELS;
-        }
-
-        const result = pathzer(...parsedLevels);
+        const parsedLevels = processFirst(args);
+        const result = main(...parsedLevels);
         console.log(JSON.stringify(result, null, 2));
     }
 }
+
+module.exports = pathzer;
