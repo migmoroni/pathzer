@@ -3,8 +3,6 @@
 const { MAX_LEVELS, levels } = require('./lib/levels');
 const { help } = require('./lib/options');
 
-
-
 /****
  * @function pathzer
  * @description Função responsável por processar até N níveis hierárquicos, cada nível contendo uma "option" e um conjunto de "param".
@@ -31,7 +29,6 @@ const { help } = require('./lib/options');
  * option: 'rp', param: ['full']
  * option: 'pp', param: ['0']
  * 
- * @see levels - A função levels é chamada para processar cada nível.
  ****/
 
 function pathzer(...argv) {
@@ -47,6 +44,7 @@ function pathzer(...argv) {
 }
 
 function main(...inputLevels) {
+    let result = []
     if (inputLevels.length > MAX_LEVELS) {
         throw new Error(`Exceeded the maximum number of allowed levels (${MAX_LEVELS}).`);
     }
@@ -56,7 +54,7 @@ function main(...inputLevels) {
     inputLevels.forEach((level, index) => {
         if (level) {
             const { option, param } = level;
-            results.push(levels(index + 1, option, ...param));
+            results.push(levels(result, index + 1, option, ...param));
         } else {
             results.push(null);  
         }

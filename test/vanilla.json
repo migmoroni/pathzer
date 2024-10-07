@@ -1,0 +1,29 @@
+{
+    "info": [
+        {
+            "name": "vanilla",
+            "langs": ["html", "js"],
+            "framework": "",
+            "version": [
+                {
+                    "major": "1",
+                    "minor": "0",
+                    "patch": "0"
+                }
+            ]
+        }
+    ],
+    "css":{
+        "color: rgb(127 29 29 / var(--tw-text-opacity));": "color1"
+    },
+    "files": {
+        "html": {
+            "<p>": "color1",
+            "</p>": "color1"
+        },
+        "js": {
+
+        },
+        "license": "color1"
+    }
+}
