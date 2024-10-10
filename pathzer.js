@@ -23,7 +23,7 @@ const { help } = require('./lib/options');
  * 
  * @example
  * 
- * pathzer('?=home/user/projects', 'rp=full', 'pp=0')
+ * pathzer('?=home/user/projects', 'rp=f', 'pp=0')
  *  
  * option: '?' , param: ['home/user/projects']
  * option: 'rp', param: ['full']
@@ -64,7 +64,14 @@ function main(...inputLevels) {
 }
 
 function processLevel(levelStr) {
-    const [option, ...params] = levelStr.split(/,|=/);
+    const [option, rest] = levelStr.split("=");
+    
+    // Regex para dividir params em vírgulas, mas preservando os colchetes como um bloco
+    let params = rest.match(/\[.*?\]|[^,\[\]]+/g);
+    
+    // Função para remover colchetes
+    params = params.map(param => param.replace(/[\[\]]/g, ''));
+    
     return { option, param: params };
 }
 

@@ -8,32 +8,3 @@ node pathzer
 
 
 
-
-
-
-
-1- Only Read
-Terminal: pathzer
-Api: pathzer(path)
-
-2- Organize: 
-
-- Extension line
-
-Arquivos de extensoes iguais por linha
-Terminal: pathzer -e
-Api: pathzer(path, "e")
-
--
-
-3- Filter:
-
-- Only folder, not root
-
-
-- Not folder, only root
-
-4- Analyser:
-
-- Number files
-

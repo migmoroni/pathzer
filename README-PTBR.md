@@ -32,7 +32,7 @@ Este programa é uma ferramenta em Node.js para processar arquivos e diretórios
     ```
 2. Navegue até o diretório do projeto:
     ```bash
-    cd seu-repositorio
+    cd pathzer
     ```
 3. Instale as dependências necessárias:
     ```bash
@@ -69,34 +69,18 @@ node pathzer 'path'
 
 ```bash
 node pathzer ?=home/projects/myproject
-
-node pathzer ?='home/projects/myproject'
-
-node pathzer ?="home/projects/myproject"
 ```
 
 - Via path relativo
 
 ```bash
-node pathzer
+node pathzer ?
 ```
-
-- Via cache de paths salvos
-
-```bash
-node pathzer ?12
-```
-
-*12 =
-"?" identificador para pesquisa no cache
-"12" id do path
 
 #### 
 
 ```bash
-node pathzer a,1,1by,3
-node pathzer a,1,1 by,3
-node pathzer all,1,1 b,3h,8
+node pathzer 
 ``` 
 
 ### Exemplo de Processamento
