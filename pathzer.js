@@ -65,12 +65,15 @@ function main(...inputLevels) {
 
 function processLevel(levelStr) {
     const [option, rest] = levelStr.split("=");
+
+    let params = [];
     
-    // Regex para dividir params em vírgulas, mas preservando os colchetes como um bloco
-    let params = rest.match(/\[.*?\]|[^,\[\]]+/g);
-    
-    // Função para remover colchetes
-    params = params.map(param => param.replace(/[\[\]]/g, ''));
+    if (rest) {
+        // Regex para dividir params em vírgulas, mas preservando os colchetes como um bloco
+        params = rest.match(/\[.*?\]|[^,\[\]]+/g) || [];
+        // Função para remover colchetes
+        params = params.map(param => param.replace(/[\[\]]/g, ''));
+    }
     
     return { option, param: params };
 }

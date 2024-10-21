@@ -14,8 +14,9 @@ Este programa é uma ferramenta em Node.js para processar arquivos e diretórios
 
 1. **Varredura de Arquivos**: O programa começa a partir de um diretório raiz fornecido e varre todos os arquivos e subdiretórios de forma recursiva.
 2. **Mapeamento**: As pastas e arquivos são lidos, e seus caminhos são armazenados.
-3. **Organização**: Com seus caminhos, os arquivos podem ser organizados.
-4. **Formatação**: Ao fim, os resultados podem ser formatados e exportados nos 8 padrões disponíveis.
+3. **Filtro e Organização**: Com seus caminhos, os arquivos podem ser organizados.
+4. **Formatação e Exportação**: Os resultados podem ser formatados e exportados em 10 padrões disponíveis.
+5. **Analisar**: Por fim, você pode de forma bem mais focada analisar seus documentos!
 
 ### Requisitos
 
@@ -27,64 +28,151 @@ Este programa é uma ferramenta em Node.js para processar arquivos e diretórios
 #### Via Clone
 
 1. Clone este repositório:
-    ```bash
-    git clone https://github.com/migmoroni/pathzer.git
-    ```
+
+```bash
+git clone https://github.com/migmoroni/pathzer.js.git
+```
+
 2. Navegue até o diretório do projeto:
-    ```bash
-    cd pathzer
-    ```
+
+```bash
+cd pathzer
+```
+
 3. Instale as dependências necessárias:
-    ```bash
-    npm install
-    ```
+
+```bash
+npm install
+```
+
 4. Execute:
-    ```bash
-    node pathzer
-    ```
+
+```bash
+node pathzer
+```
+
 #### Via NPM
 
 1. Baixe através do NPM:
-    ```bash
-    npm install pathzer
-    ```
+
+```bash
+npm install pathzer
+```
 
 ## Uso
 
 ### Via API
 
-
+```js
+pathzer("?=home/user/projects", "rp=/b", "fp=/b", "ep=/html,2")
+```
 
 ### Via interface de linha de comando
 
-Para executar o programa, use o seguinte comando no terminal, passando o caminho do diretório que deseja processar:
+Apresentamos cada uma das funções existentes:
 
 ```bash
-node pathzer 'path' 
+node pathzer ?=home/user/projects rp=/b fp=/b ep=/html,2
 ```
 
-#### Consulta de Path
+### Como o sistema entende
 
-- Via path conhecido
+opção: '?' , parametros: ['home/user/projects']
+opção: 'rp', parametros: ['full']
+opção: 'fp', parametros: ['0']
+opção: 'ep', parametros: ['html','2']
 
+## Comandos
+
+### Obtenção de Path para análise
+
+- Path conhecido
+
+CLI
 ```bash
-node pathzer ?=home/projects/myproject
+node pathzer ?=home/user/projects
+```
+API
+```js
+pathzer("?=home/user/projects")
 ```
 
-- Via path relativo
+- Path relativo
 
+CLI
 ```bash
 node pathzer ?
 ```
+API
+```js
+pathzer("?")
+```
 
-#### 
+### Leitura do Path
 
+Formas simples:
+
+CLI
 ```bash
-node pathzer 
-``` 
+node pathzer ? rp
+```
+API
+```js
+pathzer("?", "rp")
+```
 
-### Exemplo de Processamento
+* Se não informar previamente, por padrão, é fornecido o caminho relativo, ou seja, a escolha "?".
 
+#### `rp={formatter},{perm},{size},{textFile},{filterFolder},{filterFile}`
+
+### Opções e parâmetros:
+
+### {formatter}: Insere caminho root no início do resultado
+
+- **0** : Sem indicar o path root
+- **1** : Apenas a pasta root
+- **2** : Root completo, menos o usuário
+- **3** : Root completo desde a raiz
+
+### {perm}: Informa permissões dos arquivos
+
+- **0** : Não informa
+- **1** : Informa permissões de leitura e escrita
+
+### {size}: Informa tamanho dos arquivos
+
+- **0** : Não informa
+- **1** : Tamanho em bytes (precisão máxima)
+- **2** : Tamanho em KB (precisão máxima)
+- **3** : Tamanho em MB (arredondado)
+- **4** : Tamanho em MB (precisão máxima)
+- **5** : Tamanho em bytes ou KB ou MB ou GB (arredondado)
+
+### {textFile}: Informa texto interno dos documentos
+
+- **0** : Não informa
+- **\*** : Texto completo
+- **1** : Informa a quantia de caracteres de texto
+- **word1,word2,...** : Informa apenas as linhas que contêm as palavras informadas
+
+### {filterFolder}: Filtra pastas informadas
+
+- **folder1,folder2,...** : Filtra as pastas informadas
+
+### {filterFile}: Filtra os arquivos informados
+
+- **file1,file2,...** : Filtra as pastas informadas
+
+### Macros
+
+Em todas as opções, já existem macros com implementações de parametros por padrão, para diversos usos mais corriqueiros.
+
+/dev => Para desenvolvedores
+/src => Para buscas simples de pastas e arquivos
+
+## Exemplo de Processamento
+
+```
 root/
 ├── books/
 │   ├── Memorias-Postumas-de-Bras-Cubas.txt
@@ -94,7 +182,7 @@ root/
 │   └── Switzerland.txt
 ├── Readme.md
 └── Info.txt
-
+```
 ### Saidas
 
 ```bash
