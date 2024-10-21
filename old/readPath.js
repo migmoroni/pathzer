@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const filterType = require('./filterType');
 let obs = []
 
 function getFirstNCharacters(filePath, textFile, errorReport) {
@@ -23,20 +22,24 @@ function getFirstNCharacters(filePath, textFile, errorReport) {
             nChars = parseInt(parts[0], 10);
             searchWords = parts.slice(1).filter(Boolean);
         }
-        // "12"
-        } else if (typeof textFile === 'number') {
-            nChars = textFile;
-        }
+    // "12"
+    } else if (typeof textFile === 'number') {
+        nChars = textFile;
+    }
 
+    
         const fileContent = fs.readFileSync(filePath, 'utf-8');
 
         // All Chars
         if (captureWholeFile) {
+            //return `; {t(${fileContent})t}`;
+
             return fileContent == "" ? '' : `; {text-(${fileContent})-text}`;
         }
 
         // First N Chars
         if (nChars > 0 && searchWords.length === 0) {
+            //return `; {t(${fileContent.slice(0, nChars)})t}`;
             return fileContent.slice(0, nChars) == "" ? '' : `; {text-(${fileContent.slice(0, nChars)})-text}`;
         }
 
@@ -77,8 +80,9 @@ function getFullInfo(fullPath, perm, size, errorReport, report) {
     const stat = fs.statSync(fullPath);
     let info = [];
 
+    // Verifica se o caminho é um arquivo e não uma pasta
     if (stat.isFile()) {
-
+        // Verifica as permissões se perm for 2
         if (perm > 0) {
             try {
                 const isReadable = fs.accessSync(fullPath, fs.constants.R_OK) === undefined;
@@ -92,6 +96,7 @@ function getFullInfo(fullPath, perm, size, errorReport, report) {
             }
         }
 
+        // Verifica o tamanho do arquivo se o tamanho foi solicitado
         if (size > 0) {
             let fileSize = stat.size;
             if (size === 2) {
@@ -121,16 +126,18 @@ function getFullInfo(fullPath, perm, size, errorReport, report) {
     return info.length > 0 ? `; {info-(${info.join(', ')})-info}` : '';
 }
 
-function processDirectory(dirPath, progressCounter, perm, size, textFile, errorReport = [], report, filterFolder, filterFile, type) {
+// Função principal para processar o diretório e seus arquivos
+function processDirectory(dirPath, progressCounter, perm, size, textFile, errorReport = [], report, filterFolder, filterFile, filterType) {
     const result = [];
     try {
     const items = fs.readdirSync(dirPath);
     
     const directories = [];
+    // Separa os filtros em um array
+    const filterListFolder = filterFolder.split(',').map(f => f.trim().toLowerCase());
+    const filterListFile = filterFile.split(',').map(f => f.trim().toLowerCase());
 
-    const filterListFolder = filterFolder.split(',').map(f => f.trim());
-    const filterListFile = filterFile.split(',').map(f => f.trim());
-
+    // Primeiro processa todos os arquivos
     items.forEach(item => {
         progressCounter.count++;
         const fullPath = path.join(dirPath, item);
@@ -138,38 +145,68 @@ function processDirectory(dirPath, progressCounter, perm, size, textFile, errorR
 
         if (stat.isFile()) {
 
-            type.split(',').forEach(t => {
-                item = filterType(t, item, filterListFile);
-                return item;
-            });
-            
-            if (item) {
+            if (filterType === 'dn'){
+                if (!filterListFile.includes(item.toLowerCase())) {
+                    // Se não estiver no filtro, armazena para processar depois
+                    const fileInfo = getFullInfo(fullPath, perm, size, errorReport, report);
+                    const filePreview = getFirstNCharacters(fullPath, textFile, errorReport);
+                 
+                    result.push(`${item}${fileInfo}${filePreview}`);
+                } else {
+                    console.log(`Skipping file: ${item}`);
+                }
+            }
+            else if (filterType === 'kn'){
+                if (filterListFile.includes(item.toLowerCase())) {
+                    // Se não estiver no filtro, armazena para processar depois
+                    const fileInfo = getFullInfo(fullPath, perm, size, errorReport, report);
+                    const filePreview = getFirstNCharacters(fullPath, textFile, errorReport);
+                 
+                    result.push(`${item}${fileInfo}${filePreview}`);
+                } else {
+                    console.log(`Skipping file: ${item}`);
+                }
+            } else {
                 const fileInfo = getFullInfo(fullPath, perm, size, errorReport, report);
                 const filePreview = getFirstNCharacters(fullPath, textFile, errorReport);
-            
+
                 result.push(`${item}${fileInfo}${filePreview}`);
             }
             
         } else if (stat.isDirectory()) {
 
-            type.split(',').forEach(t => {
-                item = filterType(t, item, filterListFolder);
-                return item;
-            });
-
-            if (item) {
+            if (filterType === 'dn'){
+                // Verifica se o diretório está no filtro
+                if (!filterListFolder.includes(item.toLowerCase())) {
+                    // Se não estiver no filtro, armazena para processar depois
+                    //const folderInfo = getFullInfo(fullPath, perm, size, errorReport, report);
+                    directories.push(`${item}`);
+                } else {
+                    console.log(`Skipping folder: ${item}`);
+                }
+            }
+            else if (filterType === 'kn'){
+                // Verifica se o diretório está no filtro
+                if (filterListFolder.includes(item.toLowerCase())) {
+                    // Se não estiver no filtro, armazena para processar depois
+                    //const folderInfo = getFullInfo(fullPath, perm, size, errorReport, report);
+                    directories.push(`${item}`);
+                } else {
+                    console.log(`Skipping folder: ${item}`);
+                }
+            } else {
                 directories.push(`${item}`);
             }
         }
-        process.stdout.write(`\rProcess Items: ${progressCounter.count}`);
+        process.stdout.write(`\rProcess Files: ${progressCounter.count}`);
     });
 
+    // Agora processa as pastas (diretórios) após os arquivos
     directories.forEach(directory => {
-        const folderName = directory;
+        const folderName = directory; // Nome da pasta sem extensão
         const dirPathWithInfo = `${folderName}${getFullInfo(path.join(dirPath, folderName), perm, size, errorReport)}`;
-        result.push(dirPathWithInfo, processDirectory(path.join(dirPath, directory), progressCounter, perm, size, textFile, errorReport, report, filterFolder, filterFile, type));
+        result.push(dirPathWithInfo, processDirectory(path.join(dirPath, directory), progressCounter, perm, size, textFile, errorReport, report, filterFolder, filterFile));
     });
-
     } catch (err) {
         if (report > 1) {
             errorReport.push({ path: fullPath, error: `${err.code || 'ERROR'}: ${err.message}` });
@@ -180,6 +217,7 @@ function processDirectory(dirPath, progressCounter, perm, size, textFile, errorR
     return result;
 }
 
+// Função para adicionar o root de acordo com o valor de formatter
 function formatResult(baseDir, formatter, result) {
     switch (formatter) {
         case 0:
@@ -197,31 +235,35 @@ function formatResult(baseDir, formatter, result) {
             // Full Root (with user)
             return [baseDir, result];
         default:
-            throw new Error("Invalid Formatt. Use 0, 1, 2 or 3.");
+            throw new Error("Formatter inválido. Use 0, 1 ou 2.");
     }
 }
 
-
+// Função que inicia o processo a partir de um caminho fornecido
 /**
  * 
  * @param {String} dirPath 
- * @param {Number} fps 
+ * @param {Number} formatter 
+ * @param {Number} perm 
+ * @param {Number} size 
  * @param {String} textFile 
  * @param {String} filterFolder 
  * @param {String} filterFile 
  * @param {Number} report 
  * @returns {Object[]}
  */
-function main(dirPath, fps = '2,0,3', textFile = 0, type = '', filterFile = '', filterFolder = '',report = 0) {
+function main(dirPath, formatter = 2, perm = 0, size = 0, textFile = 0, filterFolder = '', filterFile = '', report = 0) {
     const progressCounter = { count: 0 };
     const errorReport = [];
-    [fps, type] = [String(fps), String(type)];
-    let [formatter, perm, size] = fps.split(',').map(Number);
+    formatter = Number((isNaN(formatter) ? formatter = 2 : formatter));
+    perm = Number((isNaN(perm) ? perm = 0 : perm));
+    size = Number((isNaN(size) ? size = 0 : size));
     report = Number((isNaN(report) ? report = 0 : report));
     filterFolder = (typeof filterFolder === 'string' ? filterFolder : '')
     filterFile = (typeof filterFile === 'string' ? filterFile : '')
     
-    const result = processDirectory(dirPath, progressCounter, perm, size, textFile, errorReport, report, filterFolder, filterFile, type);
+
+    const result = processDirectory(dirPath, progressCounter, perm, size, textFile, errorReport, report, filterFolder, filterFile);
     console.log("\r")
 
     if (report > 0){
@@ -238,6 +280,12 @@ function main(dirPath, fps = '2,0,3', textFile = 0, type = '', filterFile = '', 
     return formatResult(dirPath, formatter, result);
 }
 
+/*
+"rp=f" => "2,1,5,*,0"
+"rp=b" => "2,0,0,0,0"
+"rp=c,"
+*/
+
 /**
  * @function readPath
  * @param {String} result 
@@ -253,13 +301,10 @@ function readPath(result, ...param){
                     result[i] = main(result[i], 0, 0, 5);
                     break;
                 case '/b':
-                    result[i] = main(result[i]);
+                    result[i] = main(result[i], 2);
                     break;
                 case '/dev':
-                    result[i] = main(result[i], 0, 0, 'pdn', ".git,packages,public,.next,.gitignore,.github,node_modules,.eslintrc.js,.dockerignore,DockerfileApi,DockerfileWeb", ".git,packages,public,.next,.gitignore,.github,node_modules,.eslintrc.js,.dockerignore,DockerfileApi,DockerfileWeb");
-                    break;
-                case '/test':
-                    result[i] = main(result[i], 0, 0, 'pdn', "", "");
+                    result[i] = main(result[i], 2, 1, 1, "*", ".git,packages,public,.next,.gitignore,.github,node_modules,.eslintrc.js,.dockerignore,DockerfileApi,DockerfileWeb", ".git,packages,public,.next,.gitignore,.github,node_modules,.eslintrc.js,.dockerignore,DockerfileApi,DockerfileWeb");
                     break;
                 case '/c':
                     result[i] = main(result[i], ...param.slice(1));
