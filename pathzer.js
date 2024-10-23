@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { MAX_LEVELS, levels } = require('./lib/levels');
+const { levels, MAX_LEVELS } = require('./lib/levels');
 const { help } = require('./lib/options');
 
 /****
