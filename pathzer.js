@@ -69,12 +69,29 @@ function processLevel(levelStr) {
     let params = [];
     
     if (rest) {
+        // Regex para capturar blocos aninhados, incluindo os colchetes externos
+        const regex = /\[([^\[\]]*(?:\[[^\[\]]*\])*[^\[\]]*)\]|[^,\[\]]+/g;
+
+        // Captura os parâmetros com a regex
+        params = rest.match(regex) || [];
+       
+        params = params.map(param => {
+            // Mantém blocos com colchetes aninhados intactos
+            if (param.startsWith('[') && param.endsWith(']')) {
+                return param;
+            }
+            // Remove colchetes simples
+            return param.replace(/[\[\]]/g, '');
+        });
+    }
+    /*
+    if (rest) {
         // Regex para dividir params em vírgulas, mas preservando os colchetes como um bloco
         params = rest.match(/\[.*?\]|[^,\[\]]+/g) || [];
         // Função para remover colchetes
         params = params.map(param => param.replace(/[\[\]]/g, ''));
     }
-    
+    */
     return { option, param: params };
 }
 
