@@ -88,9 +88,14 @@ opção: 'ep', parametros: ['html','2']
 
 | Comando   |  Função  |
 |-----------|-----------|
-|  ?   | Row 1 Col 2 |
-|  ip  | Row 2 Col 2 |
-| Row 3 Col 1 | Row 3 Col 2 |
+|  [" i? "](#---obtenção-de-path-para-análise)   | Local de Importação |
+|  [" ip "](#ip---importação-de-path)  | Importação de Path |
+|  [" if "]()  | Importação de Arquivo |
+|  [" fh "]()  | Filtro Hierarquico |
+|  [" fc "]()  | Filtro Condicional |
+|  [" fs "]()  | Filtro de Classificação |
+|  [" ep "]()  | Exportação de Path |
+|  [" e? "](#---obtenção-de-path-para-análise)   | Local de Exportação |
 
 Visando simplificar o uso, tanto via CLI e via API, os comandos são unificados em um único padrão.
 
@@ -108,7 +113,7 @@ treezer("?=home/user/projects")
 
 Sendo assim, a seguir será demonstrado apenas os comandos, simplificando a explicação e uma vez que entenda, poderá utilizar em quaisquer das duas formas.
 
-### Obtenção de Path para análise
+### "?" - Obtenção de Path para análise
 
 - Path conhecido
 
@@ -122,15 +127,17 @@ Sendo assim, a seguir será demonstrado apenas os comandos, simplificando a expl
 "?"
 ```
 
-### Importação do Path
+### "ip" - Importação de Path
 
-Formas simples:
+Forma simples*:
 
 ```js
 "? ip"
 ```
 
-#### `ip={fps},{textFile},{type},{filterFile},{filterFolder}`
+*Importa com os valores padrões
+
+#### `ip={fps},{textFile},{typeA},{filterFile},{typeB},{filterFolder}`
 
 #### Opções e parâmetros:
 
@@ -171,7 +178,7 @@ p = 1
 s = 2
 
 ```js
-"? ip=[2,1,2],{textFile},{type},{filterFile},{filterFolder}"
+"? ip=[2,1,2],{textFile},{typeA},{filterFile},{typeB},{filterFolder}"
 ```
 
 #### {textFile}: Informa texto interno dos documentos
@@ -184,14 +191,14 @@ s = 2
 ##### Uso:
 
 ```js
-"? ip={fps},0,{type},{filterFile},{filterFolder}"
+"? ip={fps},0,{typeA},{filterFile},{typeB},{filterFolder}"
 
-"? ip={fps},*,{type},{filterFile},{filterFolder}"
+"? ip={fps},*,{typeA},{filterFile},{typeB},{filterFolder}"
 
-"? ip={fps},[head,body],{type},{filterFile},{filterFolder}"
+"? ip={fps},[head,body],{typeA},{filterFile},{typeB},{filterFolder}"
 ```
 
-#### {type}: Método de filtro
+#### {typeA} e {typeB}: Métodos de filtro
 
 - **d__** : Exclui apenas os termos/arquivos/pastas informados
 - **k__** : Mantém apenas os termos/arquivos/pastas informados
@@ -219,42 +226,80 @@ Caso seja numeros:
 ##### Uso:
 
 ```js
-"? ip={fps},{textFile},di*,{filterFile},{filterFolder}"
+"? ip={fps},{textFile},di*,{filterFile},ki*,{filterFolder}"
 
-"? ip={fps},{textFile},di2,{filterFile},{filterFolder}"
+"? ip={fps},{textFile},di2,{filterFile},di*,{filterFolder}"
 
-"? ip={fps},{textFile},ki1,{filterFile},{filterFolder}"
+"? ip={fps},{textFile},ki1,{filterFile},di2,{filterFolder}"
 ```
 
 #### {filterFile}: Filtra itens dos arquivos informados
 
-- **[file1,file2,...]** : Filtra os itens informados
+- **[item1,item2,...]** : Filtra os itens informados
+- **[[item1,item2,...][item3,item4,...][...]]** : Filtra por grupos de arquivos informados (pelo nivel de tipos)
 - **0** : Não filtrar
 
 ##### Uso:
 
 ```js
-"? ip={fps},{textFile},{type},file1,{filterFolder}"
+"? ip={fps},{textFile},{typeA},item1,{typeB},{filterFolder}"
 
-"? ip={fps},{textFile},{type},[file1,ext3],{filterFolder}"
+"? ip={fps},{textFile},{typeA},[item1,item2],{typeB},{filterFolder}"
 
-"? ip={fps},{textFile},{type},0,{filterFolder}"
+"? ip={fps},{textFile},{typeA},[[item1,item2][item3,item4]],{typeB},{filterFolder}"
+
+"? ip={fps},{textFile},{typeA},0,{typeB},{filterFolder}"
 ```
 
 #### {filterFolder}: Filtra pastas informadas
 
 - **[folder1,folder2,...]** : Filtra as pastas informadas
+- **[[folder1,folder2,...][folder3,folder4,...][...]]** : Filtra por grupos de pastas informadas (pelo nivel de tipos)
 - **0** : Não filtrar
 
 ##### Uso:
 
 ```js
-"? ip={fps},{textFile},{type},{filterFile},folder1"
+"? ip={fps},{textFile},{typeA},{filterFile},{typeB},folder1"
 
-"? ip={fps},{textFile},{type},{filterFile},[folder1,folder4]"
+"? ip={fps},{textFile},{typeA},{filterFile},{typeB},[folder1,folder2]"
 
-"? ip={fps},{textFile},{type},{filterFile},0"
+"? ip={fps},{textFile},{typeA},{filterFile},{typeB},[[folder1,folder2][folder3,folder4]]"
+
+"? ip={fps},{textFile},{typeA},{filterFile},{typeB},0"
 ```
+
+#### Relação dos tipos com os filtros
+
+Utilizando conceitos matemáticos de conjuntos, a relação pode ser explicada assim:
+
+1º Caso:
+
+... [t1],[ex1,...] ...
+
+[t1] age sobre [ex1,...]
+
+2º Caso:
+
+... [t1],[[ex1,...][ex2,...]] ...
+
+[t1] age sobre [ex1,...] e [ex2,...]
+
+3º Caso:
+
+... [t1,t2],[[ex1,...][ex2,...]] ...
+
+[t1] age sobre [ex1,...]
+[t2] age sobre [ex2,...]
+
+4º Caso:
+
+... [t1,t2],[[ex1,...][ex2,...][ex3,...]] ...
+
+[t1] age sobre [ex1,...]
+[t2] age sobre [ex2,...]
+[t1] e [t2] age sobre [ex3,...]
+
 
 #### Macros
 
@@ -276,6 +321,7 @@ root/
 ├── Readme.md
 └── Info.txt
 ```
+
 ### Saidas
 
 ```bash
