@@ -1,4 +1,4 @@
-# TreeZer
+# pathzer
 
 Este programa é uma ferramenta para analisar árvores de diretórios e conteudo de arquivos.
 
@@ -29,28 +29,16 @@ Permitindo tambem exportar em HTML, para uma análise visual dos dados.
 
 #### Via Clone
 
-1. Clone este repositório:
+1. Clone, acesse, instale e use:
 
 ```bash
-git clone https://github.com/treezer/treezer.js.git
-```
+git clone https://github.com/pathzer/pathzer.js.git
 
-2. Navegue até o diretório do projeto:
+cd pathzer
 
-```bash
-cd treezer
-```
-
-3. Instale as dependências necessárias:
-
-```bash
 npm install
-```
 
-4. Execute:
-
-```bash
-node treezer
+node pathzer
 ```
 
 #### Via NPM
@@ -58,7 +46,7 @@ node treezer
 1. Baixe através do NPM:
 
 ```bash
-npm install treezer
+npm install pathzer
 ```
 
 ## Uso
@@ -66,7 +54,7 @@ npm install treezer
 ### Via API
 
 ```js
-treezer("?=home/user/projects", "ip=/b", "fp=/b", "ep=/html,2")
+pathzer("i?=home/user/projects", "ip=/b", "fp=/b", "ep=/html,2")
 ```
 
 ### Via interface de linha de comando
@@ -74,14 +62,14 @@ treezer("?=home/user/projects", "ip=/b", "fp=/b", "ep=/html,2")
 Apresentamos cada uma das funções existentes:
 
 ```bash
-node treezer ?=home/user/projects ip=/b fp=/b ep=/html,2
+node pathzer i?=home/user/projects ip=/b fh=/b ex=/html,2
 ```
 
 ### Como o sistema entende
 
-opção: '?' , parametros: ['home/user/projects']
+opção: 'i?' , parametros: ['home/user/projects']
 opção: 'ip', parametros: ['full']
-opção: 'fp', parametros: ['0']
+opção: 'fh', parametros: ['0']
 opção: 'ep', parametros: ['html','2']
 
 ## Comandos
@@ -94,7 +82,7 @@ opção: 'ep', parametros: ['html','2']
 |  [" fh "]()  | Filtro Hierarquico |
 |  [" fc "]()  | Filtro Condicional |
 |  [" fs "]()  | Filtro de Classificação |
-|  [" ep "]()  | Exportação de Path |
+|  [" ex "]()  | Exportação Geral |
 |  [" e? "](#---obtenção-de-path-para-análise)   | Local de Exportação |
 
 Visando simplificar o uso, tanto via CLI e via API, os comandos são unificados em um único padrão.
@@ -103,28 +91,28 @@ Exemplo de uso:
 
 Via CLI
 ```bash
-node treezer ?=home/user/projects
+node pathzer i?=home/user/projects
 ```
 
 Via API
 ```js
-treezer("?=home/user/projects")
+pathzer("i?=home/user/projects")
 ```
 
 Sendo assim, a seguir será demonstrado apenas os comandos, simplificando a explicação e uma vez que entenda, poderá utilizar em quaisquer das duas formas.
 
-### "?" - Obtenção de Path para análise
+### "i?" - Obtenção de Path para análise
 
 - Path conhecido
 
 ```js
-"?=home/user/projects"
+"i?=home/user/projects"
 ```
 
 - Path relativo
 
 ```js
-"?"
+"i?"
 ```
 
 ### "ip" - Importação de Path
@@ -132,7 +120,7 @@ Sendo assim, a seguir será demonstrado apenas os comandos, simplificando a expl
 Forma simples*:
 
 ```js
-"? ip"
+"i? ip"
 ```
 
 *Importa com os valores padrões
@@ -178,7 +166,7 @@ p = 1
 s = 2
 
 ```js
-"? ip=[2,1,2],{textFile},{typeA},{filterFile},{typeB},{filterFolder}"
+"i? ip=[2,1,2],{textFile},{typeA},{filterFile},{typeB},{filterFolder}"
 ```
 
 #### {textFile}: Informa texto interno dos documentos
@@ -191,11 +179,11 @@ s = 2
 ##### Uso:
 
 ```js
-"? ip={fps},0,{typeA},{filterFile},{typeB},{filterFolder}"
+"i? ip={fps},0,{typeA},{filterFile},{typeB},{filterFolder}"
 
-"? ip={fps},*,{typeA},{filterFile},{typeB},{filterFolder}"
+"i? ip={fps},*,{typeA},{filterFile},{typeB},{filterFolder}"
 
-"? ip={fps},[head,body],{typeA},{filterFile},{typeB},{filterFolder}"
+"i? ip={fps},[head,body],{typeA},{filterFile},{typeB},{filterFolder}"
 ```
 
 #### {typeA} e {typeB}: Métodos de filtro
@@ -209,28 +197,34 @@ s = 2
 
 ##### Sobre os itens:
 
-Caso seja nomes de arquivos:
+Caso importe um Path e seja nomes de arquivos:
 
 - **_i\*** : Nome Completo
 - **_i1**  : Nome do arquivo
 - **_i2**  : Extensão do arquivo
 
-Caso seja nome de pastas, se não tiverem pontos ".", tanto i*,i1 e i2 funcionarão.
+Quando nome for de pastas, se não tiverem pontos ".", tanto i*,i1 e i2 funcionarão igualmente. Recomendamos o uso de i* para manter a semântica.
 
-Caso seja numeros:
+Caso importe arquivos e nomes sejam numeros:
 
-- **_i\*** : Numero Completo
-- **_i1**  : Parte inteira
+- **_i\*** : Numero Completo (Conjunto real)
+- **_i1**  : Parte inteira (Conjunto dos inteiros)
 - **_i2**  : Parte decimal
 
 ##### Uso:
 
 ```js
-"? ip={fps},{textFile},di*,{filterFile},ki*,{filterFolder}"
+"i? ip={fps},{textFile},di*,{filterFile},ki*,{filterFolder}"
 
-"? ip={fps},{textFile},di2,{filterFile},di*,{filterFolder}"
+"i? ip={fps},{textFile},di2,{filterFile},di*,{filterFolder}"
 
-"? ip={fps},{textFile},ki1,{filterFile},di2,{filterFolder}"
+"i? ip={fps},{textFile},ki1,{filterFile},di2,{filterFolder}"
+
+"i? ip={fps},{textFile},[ki1,di2],{filterFile},di2,{filterFolder}"
+
+"i? ip={fps},{textFile},ki1,{filterFile},[di2,di1],{filterFolder}"
+
+"i? ip={fps},{textFile},[ki1,di2],{filterFile},[di2,di1],{filterFolder}"
 ```
 
 #### {filterFile}: Filtra itens dos arquivos informados
@@ -242,13 +236,13 @@ Caso seja numeros:
 ##### Uso:
 
 ```js
-"? ip={fps},{textFile},{typeA},item1,{typeB},{filterFolder}"
+"i? ip={fps},{textFile},{typeA},item1,{typeB},{filterFolder}"
 
-"? ip={fps},{textFile},{typeA},[item1,item2],{typeB},{filterFolder}"
+"i? ip={fps},{textFile},{typeA},[item1,item2],{typeB},{filterFolder}"
 
-"? ip={fps},{textFile},{typeA},[[item1,item2][item3,item4]],{typeB},{filterFolder}"
+"i? ip={fps},{textFile},{typeA},[[item1,item2][item3,item4]],{typeB},{filterFolder}"
 
-"? ip={fps},{textFile},{typeA},0,{typeB},{filterFolder}"
+"i? ip={fps},{textFile},{typeA},0,{typeB},{filterFolder}"
 ```
 
 #### {filterFolder}: Filtra pastas informadas
@@ -260,13 +254,13 @@ Caso seja numeros:
 ##### Uso:
 
 ```js
-"? ip={fps},{textFile},{typeA},{filterFile},{typeB},folder1"
+"i? ip={fps},{textFile},{typeA},{filterFile},{typeB},folder1"
 
-"? ip={fps},{textFile},{typeA},{filterFile},{typeB},[folder1,folder2]"
+"i? ip={fps},{textFile},{typeA},{filterFile},{typeB},[folder1,folder2]"
 
-"? ip={fps},{textFile},{typeA},{filterFile},{typeB},[[folder1,folder2][folder3,folder4]]"
+"i? ip={fps},{textFile},{typeA},{filterFile},{typeB},[[folder1,folder2][folder3,folder4]]"
 
-"? ip={fps},{textFile},{typeA},{filterFile},{typeB},0"
+"i? ip={fps},{textFile},{typeA},{filterFile},{typeB},0"
 ```
 
 #### Relação dos tipos com os filtros
@@ -275,38 +269,50 @@ Utilizando conceitos matemáticos de conjuntos, a relação pode ser explicada a
 
 1º Caso:
 
-... [t1],[ex1,...] ...
+... [type1],[filter1,...] ...
 
-[t1] age sobre [ex1,...]
+[type1] age sobre [filter1,...]
 
 2º Caso:
 
-... [t1],[[ex1,...][ex2,...]] ...
+... [type1],[[filter1,...][filter2,...]] ...
 
-[t1] age sobre [ex1,...] e [ex2,...]
+[type1] age sobre [filter1,...] e [filter2,...]
 
 3º Caso:
 
-... [t1,t2],[[ex1,...][ex2,...]] ...
+... [type1,type2],[[filter1,...][filter2,...]] ...
 
-[t1] age sobre [ex1,...]
-[t2] age sobre [ex2,...]
+[type1] age sobre [filter1,...]
+[type2] age sobre [filter2,...]
 
 4º Caso:
 
-... [t1,t2],[[ex1,...][ex2,...][ex3,...]] ...
+... [type1,type2],[[filter1,...][filter2,...][filter3,...]] ...
 
-[t1] age sobre [ex1,...]
-[t2] age sobre [ex2,...]
-[t1] e [t2] age sobre [ex3,...]
+[type1] age sobre [filter1,...]
+[type2] age sobre [filter2,...]
+[type1] e [type2] age sobre [filter3,...]
 
 
-#### Macros
+### "if" - Importação de Arquivo
+
+### "fh" - Filtro Hierarquico
+
+### "fc" - Filtro Condicional
+
+### "fs" - Filtro de Classificação
+
+### "ex" - Exportação Geral
+
+### Macros
 
 Em todas as opções, já existem macros com implementações de parametros por padrão, para diversos usos mais corriqueiros.
 
-/dev => Para desenvolvedores
-/src => Para buscas simples de pastas e arquivos
+| Comando   |  Função  |
+|-----------|-----------|
+| /dev | Para desenvolvedores |
+| /src | Para buscas simples de pastas e arquivos |
 
 ## Exemplo de Processamento
 
@@ -325,7 +331,7 @@ root/
 ### Saidas
 
 ```bash
-node treezer 'root'
+node pathzer 'root'
 ```
 
 [
@@ -338,7 +344,7 @@ node treezer 'root'
 ]
 
 ```bash
-node treezer 'root' -oe
+node pathzer 'root' -oe
 ```
 
 [
@@ -353,7 +359,7 @@ node treezer 'root' -oe
 ]
 
 ```bash
-node treezer 'root' -oe -fa
+node pathzer 'root' -oe -fa
 ```
 
 [
